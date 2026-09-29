@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Twitch for Ray-Ban Display — POC</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="auth.js" defer></script>
+  <script src="twitch-api.js" defer></script>
+  <script src="chat.js" defer></script>
+  <script src="app.js" defer></script>
+  <script src="menu.js" defer></script>
+  <script src="login.js" defer></script>
+</head>
+<body>
+  <main id="login" aria-label="Connexion Twitch">
+    <h1>Se connecter à Twitch</h1>
+    <p id="login-status" role="status">Vérification de la session…</p>
+    <strong id="device-code"></strong>
+    <p>Activation officielle : https://www.twitch.tv/activate</p>
+    <button id="connect">Se connecter à Twitch</button>
+    <a id="activate" href="https://www.twitch.tv/activate" target="_blank" rel="noopener noreferrer" hidden>Ouvrir l’activation Twitch ↗</a>
+    <button id="cancel-connect" hidden>Annuler</button>
+  </main>
+  <main id="menu" hidden aria-label="Accueil">
+    <div id="account"><span id="account-label"></span><button id="disconnect">Déconnexion</button></div>
+    <nav id="menu-tabs" aria-label="Accueil"></nav>
+    <p id="menu-context"></p>
+    <section id="menu-results" aria-label="Résultats Twitch"></section>
+    <footer>↑↓ parcourir · ←→ onglets · Entrée ouvrir · Échap retour</footer>
+  </main>
+  <main id="app" hidden tabindex="0" aria-label="Lecteur Twitch — Entrée pour les commandes">
+    <section id="video" aria-label="Vidéo Twitch"><div id="player"></div></section>
+    <section id="chat" hidden aria-label="Messages du chat"></section>
+    <section id="controls" aria-label="Commandes temporaires">
+      <nav id="toolbar" aria-label="Lecteur">
+        <button id="menu-return">← Menu</button>
+        <button id="chat-button" aria-pressed="false">Chat OFF</button>
+        <button id="play" aria-disabled="true">Lecture</button>
+        <button id="volume-button" aria-disabled="true" title="Haut/bas : volume. Entrée : Muet/Unmute.">Son…</button>
+        <button id="quality-button" aria-disabled="true" title="Haut/bas : qualité supérieure/inférieure. Entrée : Auto.">⚙ Qualité…</button>
+      </nav>
+    </section>
+    <noscript>Activez JavaScript pour utiliser Twitch.</noscript>
+  </main>
+</body>
+</html>
