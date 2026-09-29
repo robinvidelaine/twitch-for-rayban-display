@@ -1,9 +1,9 @@
 "use strict";
 const TWITCH_CLIENT_ID = "5d7hasszi9ktxj3c7v1ldviql57adk";
 const auth = (() => {
-  const scopes = ["user:read:follows", "user:read:chat"];
+  const scopes = ["user:read:follows", "user:read:chat", "user:write:chat"];
   const storageKey = "twitch-session";
-  let session, identity, refreshTask, generation = 0;
+  let session, identity, refreshTask, generation = 0, reauthorize = false;
   const listeners = new Set();
   const emit = detail => listeners.forEach(fn => fn(detail));
   function save(data) {
@@ -27,7 +27,7 @@ const auth = (() => {
     return data;
   }
   function clear() {
-    generation++; session = null; identity = null;
+    generation++; session = null; identity = null; reauthorize = false;
     try { localStorage.removeItem(storageKey); sessionStorage.removeItem(storageKey); } catch {}
   }
   async function post(path, values) {
@@ -86,10 +86,12 @@ const auth = (() => {
     if (!r.ok) throw new Error("Validation Twitch indisponible. Session conservée ; réessayez.");
     const data = await r.json();
     if (version !== generation) return;
-    if (data.client_id !== TWITCH_CLIENT_ID || !data.user_id || !scopes.every(scope => data.scopes?.includes(scope))) {
+    if (data.client_id !== TWITCH_CLIENT_ID || !data.user_id || !scopes.slice(0, 2).every(scope => data.scopes?.includes(scope))) {
       clear();
       throw new Error("Session invalide ou permissions manquantes. Reconnectez-vous.");
     }
+    reauthorize = !data.scopes?.includes("user:write:chat");
+    if (reauthorize) throw new Error("Nouvelle autorisation Twitch nécessaire pour envoyer des messages avec votre compte.");
     session.expires = Date.now() + data.expires_in * 1000;
     persist();
     identity = { id: data.user_id, name: data.login };
@@ -97,7 +99,7 @@ const auth = (() => {
   }
   async function begin() {
     // A transient restore failure must never initiate a new device grant.
-    if (session) return restore();
+    if (session && !reauthorize) return restore();
     clear(); const version = generation;
     emit({ pending: true, message: "Demande du code Twitch…" });
     try {
@@ -132,7 +134,7 @@ const auth = (() => {
       }
       if (version === generation) emit({ error: "Code expiré. Demandez un nouveau code." });
     } catch (error) { if (version === generation || !session) {
-      emit({ retry: !!session, error: error instanceof TypeError ? "Erreur réseau. Session conservée si disponible ; réessayez." : error.message });
+      emit({ reauthorize, retry: !!session && !reauthorize, error: error instanceof TypeError ? "Erreur réseau. Session conservée si disponible ; réessayez." : error.message });
     } }
   }
   async function restore() {
@@ -144,10 +146,10 @@ const auth = (() => {
       await validate();
       if (version === generation && identity) emit({ user: identity });
     } catch (error) {
-      if (version === generation || !session) emit({ retry: !!session, error: error instanceof TypeError ? "Erreur réseau. Session conservée ; réessayez." : error.message });
+      if (version === generation || !session) emit({ reauthorize, retry: !!session && !reauthorize, error: error instanceof TypeError ? "Erreur réseau. Session conservée ; réessayez." : error.message });
     }
   }
-  setInterval(() => { if (session) validate().catch(error => { if (!session) emit({ error: error.message }); }); }, 3600000);
+  setInterval(() => { if (session) validate().catch(error => { if (!session || reauthorize) emit({ reauthorize, error: error.message }); }); }, 3600000);
   globalThis.addEventListener?.("online", () => { if (session && !identity) restore(); });
   globalThis.addEventListener?.("storage", event => {
     if (event.storageArea !== localStorage || event.key !== storageKey) return;

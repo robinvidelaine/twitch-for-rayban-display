@@ -76,7 +76,7 @@ Le projet utilise le **lecteur officiel Twitch**.
 
 Une barre de contrôle simplifiée permet d'accéder à :
 
-**Menu · Chat · Lecture/Pause · Volume · Qualité**
+**Menu · Chat · Lecture/Pause · Micro · Volume · Qualité**
 
 L'interface privilégie la vidéo et conserve un affichage 16:9 lorsque le chat est visible.
 
@@ -101,6 +101,12 @@ Les qualités proposées proviennent directement du lecteur Twitch.
 ### Chat
 
 Le chat peut être affiché ou masqué pendant le visionnage.
+
+**Micro → Entrée** ouvre un champ texte natif pour dicter sur les lunettes ou saisir au clavier sur PC. Si la dictée ne s'ouvre pas immédiatement, activez le champ avec Entrée. Vérifiez la transcription puis choisissez **Annuler** ou **Envoyer** au D-pad. Haut/bas permettent de quitter le champ ; gauche/droite déplacent le curseur pendant la saisie. Toute la ponctuation est conservée, contrairement à la recherche. Le brouillon reste uniquement en mémoire et n'est jamais enregistré dans les diagnostics.
+
+L'envoi utilise `POST /helix/chat/messages` et le compte connecté. Une nouvelle autorisation est demandée aux anciennes sessions pour ajouter uniquement `user:write:chat` aux scopes existants. Le message n'est affiché dans la conversation qu'à réception de l'événement Twitch ; aucun doublon optimiste n'est ajouté. Un refus Twitch est affiché. Après une erreur réseau, vérifiez le chat avant de réessayer : l'envoi peut avoir abouti sans réponse reçue. La limite est de 500 caractères, sans troncature automatique.
+
+La dictée dépend du composeur Meta (firmware v127+ et app Meta AI v272+ selon la documentation actuelle). Un simple focus ne suffit pas : l'activation du champ est nécessaire. Aucun accès direct au microphone ni API vocale supplémentaire n'est utilisé. Références : [saisie native Meta](https://wearables.developer.meta.com/docs/develop/webapps/build), [envoi officiel Twitch](https://dev.twitch.tv/docs/api/reference#send-chat-message).
 
 Cela permet de privilégier la vidéo lorsque le chat n'est pas nécessaire et de l'afficher rapidement lorsqu'on souhaite suivre les réactions du stream.
 
@@ -255,6 +261,38 @@ Les bugs et retours d'expérience peuvent être signalés via les Issues GitHub.
 ---
 
 ## Limitations
+
+### Parcourir, recherche et récents
+
+- **Parcourir → Catégories / Chaînes live** : images officielles des catégories et streams Twitch. Entrée ouvre une catégorie ou un live. « Charger la suite » fonctionne au D-pad.
+- Dans une liste de streams de Parcourir ou d'une catégorie, **Filtres** ouvre les réglages. Haut/bas sélectionnent un réglage ; gauche/droite ou Entrée changent langue, tri ou tag. Échap replie les filtres. La catégorie se choisit dans la liste des catégories ; le réglage Catégorie permet d'y revenir.
+- Langue et catégorie filtrent côté Twitch. La langue est mémorisée dans ce navigateur. L'ordre Twitch est décroissant par spectateurs. Les tris « spectateurs croissants » et « lives récents » concernent **uniquement les résultats chargés**, pas tout Twitch. Les streams peuvent changer entre deux pages.
+- Les tags proviennent du champ `tags` de Twitch : deux au maximum sont affichés par carte. Le filtre parcourt les tags des résultats chargés et filtre localement. Twitch ne propose pas de filtre global par tag dans Get Streams. Charger la suite élargit les résultats disponibles.
+- La recherche retire les espaces et la ponctuation finale `. , ! ? ; : …` ajoutée par la dictée. Le texte nettoyé apparaît dans le champ ; la ponctuation intérieure est conservée. Le chat n'est pas concerné.
+- **Suivis → Récemment regardés** : dix chaînes au maximum, sans doublons, stockées localement (identifiant public, login et nom uniquement). Une nouvelle ouverture remonte la chaîne en tête. Son état live est vérifié avant d'ouvrir le lecteur ; une chaîne hors ligne affiche un message et reste dans le menu. L'historique reste sur cet appareil jusqu'à l'effacement des données du site.
+
+### Avertissement dans le lecteur Twitch
+
+Sélectionnez **Menu** dans la barre puis appuyez sur **↑** pour ouvrir l'aide contextuelle. « Interagir avec Twitch » donne le focus au lecteur existant et suspend la récupération automatique du focus. Aucune commande de lecture ou de son n'est envoyée et aucun avertissement n'est validé automatiquement.
+
+Sur PC, utilisez la navigation native Twitch, puis le bouton externe « Revenir aux commandes ». Tab peut y mener si Twitch libère le focus ; ce retour n'est pas garanti, certains écrans retenant le focus. Échap ferme l'aide lorsque notre document reçoit la touche. L'aide reste sous la vidéo et ne change pas son rectangle.
+
+L'API Player n'expose pas d'événement identifiant un avertissement adulte. L'iframe cross-origin empêche notre application d'inspecter cet écran ou de recevoir ses touches. Sur les Ray-Ban Display, l'accès aux actions Twitch et le retour dépendent donc des possibilités de navigation native du runtime : **le focus seul ne garantit pas leur activation avec le Neural Band**.
+
+Vérification Chrome : Tab atteint les éléments du lecteur Twitch réel (test sur son écran hors ligne), mais le focus reste dans cet écran après plusieurs Tab/Maj+Tab. Dans une iframe de test distincte, Tab/Maj+Tab/Entrée et le retour au parent fonctionnent ; ArrowDown et un événement Tab créé en JavaScript ne déplacent pas le focus. Meta documente des événements flèches/Entrée, sans mécanisme de conversion en Tab natif inter-iframe. L'application ne peut donc pas rendre un avertissement Twitch accessible au Neural Band par simple remappage. Aucun DOM Twitch n'est inspecté et aucun avertissement n'est validé automatiquement.
+
+### Vérification en 600×600
+
+1. Parcourir : passer de Catégories à Chaînes live, ouvrir une catégorie, charger la suite puis revenir avec Échap.
+2. Ouvrir les filtres ; changer langue, tri et tag au D-pad ; vérifier la portée « résultats chargés » et fermer avec Échap.
+3. Dicter `SQUEEZIE.` ou `League of Legends.` ; valider et vérifier le champ nettoyé.
+4. Ouvrir plusieurs chaînes ; revenir au même focus et au même défilement. Ouvrir Récemment regardés, vérifier l'ordre et le message pour une chaîne hors ligne, puis fermer/réouvrir l'application.
+5. Dans le lecteur : Menu → ↑ → Interagir avec Twitch. Tester un vrai avertissement sur les lunettes puis revenir aux commandes. Vérifier Play/Pause, son, qualité et Chat ON/OFF.
+6. Après réautorisation, sélectionner Micro, dicter un message ponctué, vérifier Annuler, puis recommencer et confirmer Envoyer. Vérifier la réception dans le chat avec le compte connecté. Sur Chrome, utiliser le clavier ; l'ouverture du composeur Meta et les gestes Neural Band restent à valider sur appareil.
+
+Tests automatisés effectués dans Chrome 600×600 avec réponses Twitch et lecteur simulés : navigation, images des catégories, paramètres API, filtres locaux, dictée, récents, retour focus et transfert natif sans commande vidéo. Les avertissements Twitch réels et les gestes Neural Band nécessitent une validation sur appareil.
+
+Références : [Get Streams et catégories](https://dev.twitch.tv/docs/api/reference#get-streams), [API Player officielle](https://dev.twitch.tv/docs/embed/video-and-clips/).
 
 Certaines fonctionnalités dépendent directement de Twitch et du navigateur.
 

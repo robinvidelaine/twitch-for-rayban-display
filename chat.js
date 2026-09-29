@@ -26,7 +26,7 @@ class ReadOnlyChat {
             if(version!==this.version)return;
             await helix('eventsub/subscriptions',{}, {method:'POST',body:JSON.stringify({type,version:'1',condition:{broadcaster_user_id:this.channel,user_id:auth.user().id},transport:{method:'websocket',session_id:packet.payload.session.id}})});
           }
-          this.attempt=0;this.notice('Chat connecté — lecture seule');
+          this.attempt=0;this.notice('Chat connecté');
         }catch(error){if(version!==this.version)return;this.notice(error.message);transferred=true;socket.close()}
       } else if(type==='session_reconnect') { transferred=true;this.connect(version,packet.payload.session.reconnect_url,socket);
       } else if(type==='revocation') {this.notice('Autorisation chat révoquée. Reconnectez-vous.');transferred=true;socket.close();

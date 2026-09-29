@@ -34,6 +34,8 @@ function scheduleHide() {
   hideTimer = setTimeout(hideControls, 6000);
 }
 function focusAppControl() {
+  if (window.chatComposer?.active) return;
+  if (window.playerInteraction?.active) return;
   if ($("app").hidden) return;
   ($("controls").hidden ? $("app") : toolbar[selected]).focus({ preventScroll: true });
 }
@@ -53,6 +55,8 @@ function hideControls() {
   trace("ui:hide");
 }
 function restoreAppFocus() {
+  if (window.chatComposer?.active) return;
+  if (window.playerInteraction?.active) return;
   const active = document.activeElement;
   if (document.visibilityState === "hidden") return;
   if (active?.tagName === "IFRAME" && $("app").contains(active)) {
@@ -204,6 +208,7 @@ toolbar.forEach((button, index) => {
     scheduleHide();
     if (button.id === "chat-button") toggleChat();
     if (button.id === "play") togglePlayback();
+    if (button.id === "micro-button") window.chatComposer.open();
     if (button.id === "volume-button") toggleMuted();
     if (button.id === "quality-button") autoQuality();
   });
@@ -211,6 +216,8 @@ toolbar.forEach((button, index) => {
 const keys = new Set(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", "Escape"]);
 function handleKey(event) {
   if ($("app").hidden) return;
+  if (window.chatComposer?.handleKey(event)) return;
+  if (window.playerInteraction?.handleKey(event)) return;
   if (!keys.has(event.key)) return;
 
   event.preventDefault();
@@ -236,6 +243,10 @@ function handleKey(event) {
     return;
   }
   if (["ArrowUp", "ArrowDown"].includes(event.key)) {
+    if (event.key === "ArrowUp" && document.activeElement === $("menu-return")) {
+      window.playerInteraction.open();
+      return;
+    }
     const direction = event.key === "ArrowUp" ? 1 : -1;
     if (document.activeElement === $("volume-button") && ready) {
       const volume = player.getVolume();
