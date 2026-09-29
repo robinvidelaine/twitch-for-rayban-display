@@ -12,6 +12,7 @@
     screen.hidden = !!detail.user;
     if (detail.user) { code.textContent = ""; return; }
     start.hidden = !!detail.pending;
+    start.textContent = detail.retry ? "Réessayer la connexion" : "Se connecter à Twitch";
     cancel.hidden = !detail.pending;
     if (detail.code) code.textContent = detail.code;
     if (!detail.pending) code.textContent = "";
