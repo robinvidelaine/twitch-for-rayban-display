@@ -12,7 +12,8 @@
     screen.hidden = !!detail.user;
     if (detail.user) { code.textContent = ""; return; }
     start.hidden = !!detail.pending;
-    start.textContent = detail.retry ? "Réessayer la connexion" : "Se connecter à Twitch";
+    start.disabled = !!detail.restoring;
+    start.textContent = detail.restoring ? "Restauration en cours…" : detail.retry ? "Réessayer la connexion" : "Se connecter à Twitch";
     cancel.hidden = !detail.pending;
     if (detail.code) code.textContent = detail.code;
     if (!detail.pending) code.textContent = "";
@@ -26,9 +27,12 @@
     if (screen.hidden || !["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", "Escape"].includes(event.key)) return;
     event.preventDefault();
     if (event.type === "keyup" || event.repeat) return;
-    if (event.key === "Escape") return auth.logout();
+    // Escape cancels an active device grant, never a stored session being
+    // restored (or retained after a network error).
+    if (event.key === "Escape") { if (!cancel.hidden) auth.logout(); return; }
     if (event.key === "Enter") return document.activeElement.click();
-    const controls = [...screen.querySelectorAll("button,a")].filter(el => !el.hidden);
+    const controls = [...screen.querySelectorAll("button,a")].filter(el => !el.hidden && !el.disabled);
+    if (!controls.length) return;
     const delta = ["ArrowUp", "ArrowLeft"].includes(event.key) ? -1 : 1;
     controls[(controls.indexOf(document.activeElement) + delta + controls.length) % controls.length].focus();
   }

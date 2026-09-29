@@ -64,6 +64,13 @@ const auth = (() => {
     if (!Number.isFinite(session.expires) || session.expires < Date.now() + 60000) await refresh();
     return session.access_token;
   }
+  async function recover(rejectedAccess) {
+    if (!session) throw new Error("Connexion Twitch nécessaire.");
+    // A Helix 401 is not a manual logout. Refresh once, preserving storage on
+    // network/server errors; refresh() alone handles a refused refresh token.
+    await refresh(rejectedAccess);
+    return token();
+  }
   async function validate() {
     const version = generation;
     if (!session) throw new Error("Connexion Twitch nécessaire.");
@@ -132,7 +139,8 @@ const auth = (() => {
     const version = generation;
     try {
       session = session || load();
-      if (!session) { emit({}); return; }
+      if (!session) { emit({ message: "Aucune session enregistrée sur ce navigateur. Connectez-vous à Twitch." }); return; }
+      emit({ restoring: true, message: "Restauration de votre connexion Twitch…" });
       await validate();
       if (version === generation && identity) emit({ user: identity });
     } catch (error) {
@@ -142,9 +150,9 @@ const auth = (() => {
   setInterval(() => { if (session) validate().catch(error => { if (!session) emit({ error: error.message }); }); }, 3600000);
   globalThis.addEventListener?.("online", () => { if (session && !identity) restore(); });
   globalThis.addEventListener?.("storage", event => {
-    if (event.key !== storageKey) return;
+    if (event.storageArea !== localStorage || event.key !== storageKey) return;
     if (!event.newValue) { generation++; session = null; identity = null; emit({}); }
     else { try { session = JSON.parse(event.newValue); } catch {} }
   });
-  return { begin, restore, token, user: () => identity, on: fn => listeners.add(fn), logout() { clear(); emit({}); } };
+  return { begin, restore, token, recover, user: () => identity, on: fn => listeners.add(fn), logout() { clear(); emit({}); } };
 })();

@@ -5,8 +5,11 @@ async function helix(path, params = {}, options = {}) {
     if (Array.isArray(value)) value.forEach(item => url.searchParams.append(key, item));
     else if (value) url.searchParams.set(key, value);
   });
-  const response = await fetch(url, { ...options, signal: options.signal || AbortSignal.timeout(15000), headers: { "Client-Id": TWITCH_CLIENT_ID, Authorization: `Bearer ${await auth.token()}`, ...(options.body ? { "Content-Type": "application/json" } : {}) } });
-  if (response.status === 401) { auth.logout(); throw new Error("Session expirée. Reconnectez-vous."); }
+  const send = access => fetch(url, { ...options, signal: options.signal || AbortSignal.timeout(15000), headers: { "Client-Id": TWITCH_CLIENT_ID, Authorization: `Bearer ${access}`, ...(options.body ? { "Content-Type": "application/json" } : {}) } });
+  const access = await auth.token();
+  let response = await send(access);
+  if (response.status === 401) response = await send(await auth.recover(access));
+  if (response.status === 401) throw new Error("Accès Twitch refusé après renouvellement. Session conservée ; réessayez.");
   if (response.status === 429) throw new Error("Limite Twitch atteinte. Patientez avant de réessayer.");
   if (!response.ok) throw new Error(`Twitch a refusé la demande (${response.status}).`);
   return response.status === 204 ? null : response.json();
