@@ -5,6 +5,8 @@ const EMBED_PARENT = location.hostname; // No scheme, port or path; localhost HT
 const $ = (id) => document.getElementById(id);
 const toolbar = [...$("toolbar").querySelectorAll("button")];
 const chat = new ReadOnlyChat($("chat"));
+const streamDetails = new StreamDetails($("stream-details"), $("app"));
+let panelMode = "off";
 let player;
 let ready = false;
 let selected = 2;
@@ -193,12 +195,14 @@ function changeQuality(direction) {
   if (next.group !== current) requestQuality(next);
 }
 function toggleChat() {
-  if (!EMBED_PARENT || !["http:", "https:"].includes(location.protocol)) return;
-  chat.setMode(chat.mode === "off" ? "compact" : "off");
-  $("app").classList.toggle("chat-visible", chat.mode === "compact");
-  $("chat-button").textContent = chat.mode === "off" ? "Chat OFF" : "Chat ON";
-  $("chat-button").setAttribute("aria-pressed", String(chat.mode !== "off"));
-  trace("chat:mode", { mode: chat.mode });
+  const modes = ["off", "chat", "info"];
+  panelMode = modes[(modes.indexOf(panelMode) + 1) % modes.length];
+  chat.setMode(panelMode === "chat" ? "compact" : "off");
+  streamDetails.setVisible(panelMode === "info");
+  $("app").classList.toggle("chat-visible", panelMode !== "off");
+  $("chat-button").textContent = { off: "Rien", chat: "Chat", info: "Infos" }[panelMode];
+  $("chat-button").setAttribute("aria-label", `Panneau : ${$("chat-button").textContent}. Entrée pour changer : Rien, Chat, Infos.`);
+  trace("panel:mode", { mode: panelMode });
 }
 toolbar.forEach((button, index) => {
   button.addEventListener("focus", () => {
@@ -247,6 +251,10 @@ function handleKey(event) {
       window.playerInteraction.open();
       return;
     }
+    if (document.activeElement === $("chat-button") && panelMode === "info") {
+      $("stream-details").scrollTop += event.key === "ArrowUp" ? -60 : 60;
+      return;
+    }
     const direction = event.key === "ArrowUp" ? 1 : -1;
     if (document.activeElement === $("volume-button") && ready) {
       const volume = player.getVolume();
@@ -267,6 +275,7 @@ function openExistingPlayer(entry) {
   $("app").hidden = false;
   showControls();
   chat.watch(entry.id);
+  streamDetails.watch(entry);
   const changed = currentChannel !== entry.login;
   currentChannel = entry.login;
   if (playerInitialized) {

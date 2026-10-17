@@ -8,6 +8,7 @@
   <script src="auth.js" defer></script>
   <script src="twitch-api.js" defer></script>
   <script src="chat.js" defer></script>
+  <script src="stream-details.js" defer></script>
   <script src="app.js" defer></script>
   <script src="player-interaction.js" defer></script>
   <script src="chat-composer.js" defer></script>
@@ -34,10 +35,11 @@
   <main id="app" hidden tabindex="0" aria-label="Lecteur Twitch — Entrée pour les commandes">
     <section id="video" aria-label="Vidéo Twitch"><div id="player"></div></section>
     <section id="chat" hidden aria-label="Messages du chat"></section>
+    <section id="stream-details" hidden aria-label="Informations du live"></section>
     <section id="controls" aria-label="Commandes temporaires">
       <nav id="toolbar" aria-label="Lecteur">
         <button id="menu-return" title="Entrée : menu. Flèche haut : aide pour interagir avec Twitch." aria-description="Flèche haut ouvre l’aide pour interagir avec un avertissement Twitch.">← Menu<small>↑ Aide Twitch</small></button>
-        <button id="chat-button" aria-pressed="false">Chat OFF</button>
+        <button id="chat-button" aria-controls="chat stream-details" title="Entrée : Rien → Chat → Infos. En mode Infos, haut/bas fait défiler les informations.">Rien</button>
         <button id="play" aria-disabled="true">Lecture</button>
         <button id="micro-button">Micro</button>
         <button id="volume-button" aria-disabled="true" title="Haut/bas : volume. Entrée : Muet/Unmute.">Son…</button>

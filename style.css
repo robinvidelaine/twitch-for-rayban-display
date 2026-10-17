@@ -57,7 +57,7 @@ input { display: block; width: 100%; margin-top: 6px; padding: 11px; border: 1px
 /* Keep the actual iframe's geometry constant when chat or toolbar changes.
    Resizing the live Twitch viewport reproduced an unsolicited PAUSE. */
 #player { position: absolute; top: 0; left: 0; height: auto; aspect-ratio: 16 / 9; }
-#chat { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 14px; font-size: 18px; line-height: 1.4; overflow-wrap: anywhere; background: #0d121d; }
+#chat { flex: 1; min-height: 0; overflow-y: auto; padding: 0 14px 10px; font-size: 18px; line-height: 1.4; overflow-wrap: anywhere; background: #0d121d; }
 .chat-message { margin: 0 0 6px; }
 .chat-status { margin: 0 0 8px; color: var(--muted); font-size: 13px; }
 #controls { flex: 0 0 68px; height: 68px; padding: 10px 8px; background: #101621; }
@@ -72,3 +72,10 @@ input { display: block; width: 100%; margin-top: 6px; padding: 11px; border: 1px
 .composer-actions button { flex: 1; }
 #toolbar button { min-height: 48px; padding: 6px 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-radius: 10px; }
 @media (max-width: 450px) { .menu-card { grid-template-columns: 32% minmax(0, 1fr); gap: 10px; } }
+
+/* Local information panel shares the chat's space, below the fixed player. */
+#stream-details { flex: 1; min-height: 0; overflow-y: auto; padding: 0 16px 12px; background: #0d121d; overflow-wrap: anywhere; }
+#stream-details h2 { margin: 0 0 6px; font-size: 22px; }
+#stream-details p { margin: 5px 0; font-size: 17px; line-height: 1.35; }
+#stream-details .details-meta { color: #c1cde1; font-size: 15px; }
+#stream-details .details-status { color: var(--muted); font-size: 12px; }

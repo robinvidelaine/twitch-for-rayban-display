@@ -76,9 +76,9 @@ Le projet utilise le **lecteur officiel Twitch**.
 
 Une barre de contrôle simplifiée permet d'accéder à :
 
-**Menu · Chat · Lecture/Pause · Micro · Volume · Qualité**
+**Menu · Rien/Chat/Infos · Lecture/Pause · Micro · Volume · Qualité**
 
-L'interface privilégie la vidéo et conserve un affichage 16:9 lorsque le chat est visible.
+La vidéo conserve toujours son rectangle 16:9 en haut, quel que soit le panneau affiché.
 
 ### Volume
 
@@ -100,7 +100,11 @@ Les qualités proposées proviennent directement du lecteur Twitch.
 
 ### Chat
 
-Le chat peut être affiché ou masqué pendant le visionnage.
+Le bouton **Rien / Chat / Infos** fait défiler ces trois modes avec `Entrée` ou un clic. Un seul panneau est visible sous la vidéo ; **Rien** laisse cette zone noire. Les changements de panneau ne commandent ni lecture, ni son, ni qualité et conservent le lecteur et le chat existants.
+
+**Infos** affiche le nom du streamer, le titre du live, la catégorie, le nombre de spectateurs et la durée du direct. Les données viennent de [Get Streams officiel](https://dev.twitch.tv/docs/api/reference#get-streams), avec la session déjà connectée, sans nouvelle permission. Elles sont demandées à l'ouverture puis toutes les 60 secondes tant que le panneau, le lecteur et l'onglet sont visibles. Ce compteur n'est donc pas instantané. Une chaîne hors ligne ou une erreur réseau est indiquée sans inventer de spectateurs. Les réponses d'une chaîne précédemment ouverte sont ignorées.
+
+Quand **Infos** est sélectionné dans la barre, `↑` / `↓` font défiler le panneau si nécessaire. `←` / `→` continuent à naviguer dans la barre.
 
 **Micro → Entrée** ouvre un champ texte natif pour dicter sur les lunettes ou saisir au clavier sur PC. Si la dictée ne s'ouvre pas immédiatement, activez le champ avec Entrée. Vérifiez la transcription puis choisissez **Annuler** ou **Envoyer** au D-pad. Haut/bas permettent de quitter le champ ; gauche/droite déplacent le curseur pendant la saisie. Toute la ponctuation est conservée, contrairement à la recherche. Le brouillon reste uniquement en mémoire et n'est jamais enregistré dans les diagnostics.
 
@@ -324,3 +328,7 @@ Le code source est publiquement visible afin de permettre la transparence et l'u
 Sauf autorisation explicite, sa publication sur GitHub ne constitue pas une autorisation de copier, modifier, redistribuer, republier ou exploiter commercialement le code.
 
 Les marques **Twitch**, **Meta**, **Ray-Ban** et les autres marques citées appartiennent à leurs propriétaires respectifs.
+
+### Vérifier le panneau Infos
+
+En Chrome 600×600, ouvrir un live puis faire plusieurs cycles Rien → Chat → Infos → Rien au clic et à Entrée. Vérifier que le rectangle de l'iframe reste à 600×337,5, barre ouverte et fermée, sans pause ni changement audio. Vérifier le défilement haut/bas d'un titre long, les spectateurs (y compris zéro), l'actualisation après 60 secondes, les erreurs réseau et une fin de live. Revenir au menu puis ouvrir une autre chaîne : aucune information de l'ancienne chaîne ne doit réapparaître. Vérifier que le menu retrouve son focus et son défilement. Les essais sur flux réel et Neural Band restent nécessaires.
